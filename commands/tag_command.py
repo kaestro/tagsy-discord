@@ -17,6 +17,7 @@ from disnake.ext import commands
 from db.sqlite_handler import (
     delete_message,
     get_all_messages,
+    get_all_messages_by_author,
     get_message,
     get_similar_tags,
     increment_usage_count,
@@ -288,6 +289,33 @@ class TagCommands(commands.Cog):
                     )
                 else:
                     await message.channel.send(f'No message found for tag "{tag}".')
+
+    @commands.slash_command(
+        name="get_all_tags_by", description="Lists all tags by a specific author."
+    )
+    async def get_all_by(
+        self, inter: disnake.ApplicationCommandInteraction, author: str
+    ):
+        """
+        Lists all tags by a specific author.
+
+        Parameters:
+        - inter: The interaction object representing the slash command interaction.
+        - author: The author whose tags are to be listed.
+
+        Returns:
+        - None
+        """
+        server_id = str(inter.guild.id)
+        tags_details = await get_all_messages_by_author(server_id, author)
+
+        if tags_details:
+            tags = [detail["tag"] for detail in tags_details]
+            await inter.response.send_message(
+                f"All tags by {author}: {', '.join(tags)}"
+            )
+        else:
+            await inter.response.send_message(f"No tags found by author {author}.")
 
 
 def setup(bot):

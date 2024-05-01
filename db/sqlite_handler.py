@@ -213,3 +213,40 @@ async def reset_usage_count(server_id, tag):
             (server_id, tag),
         )
         await db.commit()
+
+
+async def get_all_messages_by_author(server_id: str, author: str):
+    """
+    Fetches all messages by a specific author from the database.
+
+    Parameters:
+    - server_id: The ID of the server.
+    - author: The author whose messages are to be fetched.
+
+    Returns:
+    - A list of message details.
+    """
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            """
+            SELECT tag, content, created_by, created_at, usage_count
+            FROM messages
+            WHERE server_id = ? AND created_by = ?
+            """,
+            (server_id, author),
+        )
+        rows = await cursor.fetchall()
+
+        # Convert rows to a list of dictionaries for easier access in the calling function
+        messages = [
+            {
+                "tag": row[0],
+                "content": row[1],
+                "created_by": row[2],
+                "created_at": row[3],
+                "usage_count": row[4],
+            }
+            for row in rows
+        ]
+
+        return messages
